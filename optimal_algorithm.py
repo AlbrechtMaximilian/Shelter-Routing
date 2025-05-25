@@ -5,7 +5,7 @@ import time
 def solve_routing(S, V, T,
                   distance, demand,
                   capacity, speed,
-                  unload_t, Tmax):
+                  unload_t):
     """
     S: iterable of nodes (0 = depot)
     V: iterable of vehicles
@@ -54,13 +54,13 @@ def solve_routing(S, V, T,
     for i in S:
         if i!=0:
             m.addConstr(sum(q[i,v,t] for v in V for t in T)==demand[i])
-    # 4) time limit
+    """# 4) time limit
     for v in V:
         for t in T:
             drive = sum((distance[i,j]/speed)*60 * x[i,j,v,t]
                         for i in S for j in S if i!=j)
             unload = sum(unload_t * q[i,v,t] for i in S if i!=0)
-            m.addConstr(drive + unload <= Tmax)
+            m.addConstr(drive + unload <= Tmax)"""
     # 5) MTZ + root
     for v in V:
         for t in T:
@@ -97,24 +97,24 @@ def solve_routing(S, V, T,
 # normal function call
 S = range(4)
 V = range(1)
-T = range(2)
+T = range(6)
 distance = {
     (0,1):10,(1,0):10,(0,2):15,(2,0):15,
     (0,3):20,(3,0):20,(1,2):5, (2,1):5,
     (1,3):10,(3,1):10,(2,3):7, (3,2):7
 }
 demand = {1:2, 2:3, 3:1}
-capacity = 5
+capacity = 1
 speed = 60
 unload_t = 10
-Tmax = 1440
+#Tmax = 1440
 
 # direct function call
 obj, runtime = solve_routing(
     S, V, T,
     distance, demand,
     capacity, speed,
-    unload_t, Tmax
+    unload_t
 )
 
 print(f"Obj value = {obj:.1f} min, solve time = {runtime:.3f} s")
