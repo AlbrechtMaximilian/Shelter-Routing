@@ -1,8 +1,9 @@
 import gurobipy as gp
 from gurobipy import GRB
 import time
+import math
 
-def solve_routing(S, V, T,
+def solve_routing(S, V,
                   distance, demand,
                   capacity, speed,
                   unload_t):
@@ -17,6 +18,14 @@ def solve_routing(S, V, T,
     unload_t: min to unload 1 ton
     Tmax: max minutes/trip
     """
+    # calculate T
+    # calculate wors-case trip number
+    D = sum(demand[i] for i in S if i != 0)  # total demand
+    T_max = math.ceil(D / (capacity * len(V)))  # worst-case trips
+    T = range(T_max)
+    print("maximum number of trips needed: " + str(T_max))
+
+    # start gurobi
     m = gp.Model()
     # Vars
     x = m.addVars(S, S, V, T, vtype=GRB.BINARY)
@@ -114,17 +123,9 @@ speed = 60
 unload_t = 10
 #Tmax = 1440
 
-import math
-
-# calculate wors-case trip number
-D = sum(demand[i] for i in S if i!=0)               # total demand
-T_max = math.ceil( D / (capacity * len(V)) )        # worst-case trips
-T = range(T_max)
-print("maximum number of trips needed: " + str(T_max))
-
 # direct function call
 obj, runtime = solve_routing(
-    S, V, T,
+    S, V,
     distance, demand,
     capacity, speed,
     unload_t
