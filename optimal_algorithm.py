@@ -77,6 +77,20 @@ def solve_routing(S, V, T,
     m.optimize()
     runtime = time.time() - start
 
+    # Output
+    for v in V:
+        for t in T:
+            route = []
+            for i in S:
+                for j in S:
+                    if i != j and x[i, j, v, t].X > 0.5:
+                        route.append((i, j))
+            if route:
+                print(f"Vehicle {v}, Trip {t}: Route: {route}")
+                for i in S:
+                    if i != 0 and q[i, v, t].X > 0:
+                        print(f"  Deliver to {i}: {q[i, v, t].X:.2f} tons")
+
     return m.ObjVal, runtime
 
 
@@ -90,7 +104,10 @@ distance = {
     (1,3):10,(3,1):10,(2,3):7, (3,2):7
 }
 demand = {1:2, 2:3, 3:1}
-capacity, speed, unload_t, Tmax = 5, 60, 10, 1440
+capacity = 5
+speed = 60
+unload_t = 10
+Tmax = 1440
 
 # direct function call
 obj, runtime = solve_routing(
