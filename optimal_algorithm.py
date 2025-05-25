@@ -97,7 +97,7 @@ def solve_routing(S, V, T,
 # normal function call
 S = range(4)
 V = range(1)
-T = range(6)
+#T = range(6)
 distance = {
     (0,1):10,(1,0):10,(0,2):15,(2,0):15,
     (0,3):20,(3,0):20,(1,2):5, (2,1):5,
@@ -108,6 +108,14 @@ capacity = 1
 speed = 60
 unload_t = 10
 #Tmax = 1440
+
+import math
+
+# calculate wors-case trip number
+D = sum(demand[i] for i in S if i!=0)               # total demand
+T_max = math.ceil( D / (capacity * len(V)) )        # worst-case trips
+T = range(T_max)
+print("maximum number of trips needed: " + str(T_max))
 
 # direct function call
 obj, runtime = solve_routing(
