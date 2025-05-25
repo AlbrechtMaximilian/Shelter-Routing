@@ -16,7 +16,7 @@ def instance_generator(num_instances=30):
     base_unload = 10      # min per ton
 
     # --- level definitions ---
-    shelters = {'low':5, 'med':10, 'high':15}
+    shelters = {'low':5, 'med':10, 'high':30}
     vehicles = {'low':2,  'med':5,  'high':10}
     capacity = {'low':20, 'med':50, 'high':100}
     def d_low(n):        return np.random.randint(1,11, size=n)

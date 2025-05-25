@@ -26,7 +26,7 @@ def load_instance(path):
 
 if __name__ == "__main__":
     # hard-coded instance path
-    instance_path = "scenario_2_instance_1.xlsx"
+    instance_path = "scenario_3_instance_1.xlsx"
 
     # 1) load parameters
     S, V, distance, demand, capacity, speed, unload_t = load_instance(instance_path)
