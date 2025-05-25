@@ -31,6 +31,9 @@ if __name__ == "__main__":
     # 1) load parameters
     S, V, distance, demand, capacity, speed, unload_t = load_instance(instance_path)
 
+    print(demand)
+    print(distance)
+
     # 2) solve (make sure solve_routing is silent except return values)
     obj_value, solve_time = solve_routing(
         S, V,
