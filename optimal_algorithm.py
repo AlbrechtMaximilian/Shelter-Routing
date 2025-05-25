@@ -18,6 +18,8 @@ def solve_routing(S, V,
     unload_t: min to unload 1 ton
     Tmax: max minutes/trip
     """
+
+    launch_cost = 100
     # calculate T
     # calculate wors-case trip number
     D = sum(demand[i] for i in S if i != 0)  # total demand
@@ -124,7 +126,6 @@ if __name__ == "__main__":
     capacity = 1
     speed = 60
     unload_t = 10
-    launch_cost = 100
 
     obj, runtime = solve_routing(
         S, V,
