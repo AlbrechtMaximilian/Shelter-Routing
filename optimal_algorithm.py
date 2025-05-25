@@ -32,22 +32,27 @@ def solve_routing(S, V,
     q = m.addVars(S, V, T, vtype=GRB.CONTINUOUS, lb=0)
     u = m.addVars(S, V, T, vtype=GRB.CONTINUOUS, lb=0, ub=len(S)-1)
     # Obj
-    m.setObjective(
-        # 1) total drive time (in minutes)
-        gp.quicksum((distance[i, j] / speed) * 60 * x[i, j, v, t]
-                    for i in S for j in S if i != j
-                    for v in V for t in T)
-        +  # 2) total unload time (in minutes)
-        gp.quicksum(unload_t * q[i, v, t]
-                    for i in S if i != 0
-                    for v in V for t in T),
-        GRB.MINIMIZE
-    )
+    # --- (2) Rebuild the objective ---
+    drive_time = gp.quicksum((distance[i, j] / speed) * 60 * x[i, j, v, t]
+                             for i in S for j in S if i != j
+                             for v in V for t in T)
+
+    unload_time = gp.quicksum(unload_t * q[i, v, t]
+                              for i in S if i != 0
+                              for v in V for t in T)
+
+    launch_ind = gp.quicksum(x[0, j, v, t]  # arc 0→j exists ⇒ trip is dispatched
+                             for j in S if j != 0
+                             for v in V for t in T)
+
+    m.setObjective(drive_time + unload_time + launch_cost * launch_ind,
+                   GRB.MINIMIZE)
+
     # 1) start/end at 0
     for v in V:
         for t in T:
-            m.addConstr(sum(x[0,j,v,t] for j in S if j!=0)==1)
-            m.addConstr(sum(x[j,0,v,t] for j in S if j!=0)==1)
+            m.addConstr(sum(x[0,j,v,t] for j in S if j!=0)<=1)
+            m.addConstr(sum(x[j,0,v,t] for j in S if j!=0)<=1)
     # 2) flow conservation
     for v in V:
         for t in T:
@@ -109,18 +114,19 @@ def solve_routing(S, V,
 
 
 # normal function call
-S = range(4)
-V = range(1)
+S = range(3)
+V = range(2)
 #T = range(6)
 distance = {
     (0,1):10,(1,0):10,(0,2):15,(2,0):15,
     (0,3):20,(3,0):20,(1,2):5, (2,1):5,
     (1,3):10,(3,1):10,(2,3):7, (3,2):7
 }
-demand = {1:2, 2:3, 3:1}
-capacity = 1
+demand = {1:2, 2:1}
+capacity = 4
 speed = 60
 unload_t = 10
+launch_cost = 100          # fixed cost per dispatched trip (minutes-equivalent, adjust as needed)
 #Tmax = 1440
 
 # direct function call
