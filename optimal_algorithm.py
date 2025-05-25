@@ -79,19 +79,25 @@ def solve_routing(S, V, T,
 
     return m.ObjVal, runtime
 
-# — example call —
-if __name__ == "__main__":
-    S = range(4)
-    V = range(1)
-    T = range(2)
-    distance = {(0,1):10,(1,0):10, (0,2):15,(2,0):15,
-                (0,3):20,(3,0):20,(1,2):5,(2,1):5,
-                (1,3):10,(3,1):10,(2,3):7,(3,2):7}
-    demand = {1:2, 2:3, 3:1}
-    capacity, speed, unload_t, Tmax = 5, 60, 10, 1440
 
-    obj, t = solve_routing(S, V, T,
-                           distance, demand,
-                           capacity, speed,
-                           unload_t, Tmax)
-    print(f"Obj value = {obj:.1f} min, solve time = {t:.3f} s")
+# normal function call
+S = range(4)
+V = range(1)
+T = range(2)
+distance = {
+    (0,1):10,(1,0):10,(0,2):15,(2,0):15,
+    (0,3):20,(3,0):20,(1,2):5, (2,1):5,
+    (1,3):10,(3,1):10,(2,3):7, (3,2):7
+}
+demand = {1:2, 2:3, 3:1}
+capacity, speed, unload_t, Tmax = 5, 60, 10, 1440
+
+# direct function call
+obj, runtime = solve_routing(
+    S, V, T,
+    distance, demand,
+    capacity, speed,
+    unload_t, Tmax
+)
+
+print(f"Obj value = {obj:.1f} min, solve time = {runtime:.3f} s")
