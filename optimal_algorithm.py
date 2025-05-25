@@ -24,8 +24,13 @@ def solve_routing(S, V, T,
     u = m.addVars(S, V, T, vtype=GRB.CONTINUOUS, lb=0, ub=len(S)-1)
     # Obj
     m.setObjective(
-        gp.quicksum((distance[i,j]/speed)*60 * x[i,j,v,t]
-                    for i in S for j in S if i!=j
+        # 1) total drive time (in minutes)
+        gp.quicksum((distance[i, j] / speed) * 60 * x[i, j, v, t]
+                    for i in S for j in S if i != j
+                    for v in V for t in T)
+        +  # 2) total unload time (in minutes)
+        gp.quicksum(unload_t * q[i, v, t]
+                    for i in S if i != 0
                     for v in V for t in T),
         GRB.MINIMIZE
     )
