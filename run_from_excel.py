@@ -26,7 +26,7 @@ def load_instance(path):
 
 if __name__ == "__main__":
     # hard-coded instance path
-    instance_path = "scenario_1_instance_1.xlsx"
+    instance_path = "scenario_2_instance_1.xlsx"
 
     # 1) load parameters
     S, V, distance, demand, capacity, speed, unload_t = load_instance(instance_path)
@@ -35,13 +35,13 @@ if __name__ == "__main__":
     print(distance)
 
     # 2) solve (make sure solve_routing is silent except return values)
-    obj_value, solve_time = solve_routing(
+    """obj_value, solve_time = solve_routing(
         S, V,
         distance, demand,
         capacity, speed,
         unload_t
-    )
+    )"""
 
     # 3) report
-    print(f"Obj value = {obj_value:.3f} min")
-    print(f"Solve time = {solve_time:.3f} s")
+    #print(f"Obj value = {obj_value:.3f} min")
+    #print(f"Solve time = {solve_time:.3f} s")
