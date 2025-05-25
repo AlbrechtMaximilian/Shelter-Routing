@@ -32,22 +32,25 @@ def solve_routing(S, V,
     q = m.addVars(S, V, T, vtype=GRB.CONTINUOUS, lb=0)
     u = m.addVars(S, V, T, vtype=GRB.CONTINUOUS, lb=0, ub=len(S)-1)
     # Obj
-    m.setObjective(
-        # 1) total drive time (in minutes)
-        gp.quicksum((distance[i, j] / speed) * 60 * x[i, j, v, t]
-                    for i in S for j in S if i != j
-                    for v in V for t in T)
-        +  # 2) total unload time (in minutes)
-        gp.quicksum(unload_t * q[i, v, t]
-                    for i in S if i != 0
-                    for v in V for t in T),
-        GRB.MINIMIZE
-    )
+    drive_time = gp.quicksum((distance[i, j] / speed) * 60 * x[i, j, v, t]
+                             for i in S for j in S if i != j
+                             for v in V for t in T)
+
+    unload_time = gp.quicksum(unload_t * q[i, v, t]
+                              for i in S if i != 0
+                              for v in V for t in T)
+
+    launch_ind = gp.quicksum(x[0, j, v, t]  # arc 0→j exists ⇒ trip is dispatched
+                             for j in S if j != 0
+                             for v in V for t in T)
+
+    m.setObjective(drive_time + unload_time + launch_cost * launch_ind,
+                   GRB.MINIMIZE)
     # 1) start/end at 0
     for v in V:
         for t in T:
-            m.addConstr(sum(x[0,j,v,t] for j in S if j!=0)==1)
-            m.addConstr(sum(x[j,0,v,t] for j in S if j!=0)==1)
+            m.addConstr(sum(x[0,j,v,t] for j in S if j!=0)<=1)
+            m.addConstr(sum(x[j,0,v,t] for j in S if j!=0)<=1)
     # 2) flow conservation
     for v in V:
         for t in T:
@@ -121,6 +124,7 @@ if __name__ == "__main__":
     capacity = 1
     speed = 60
     unload_t = 10
+    launch_cost = 100
 
     obj, runtime = solve_routing(
         S, V,
