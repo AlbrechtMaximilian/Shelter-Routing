@@ -1,78 +1,97 @@
 import gurobipy as gp
 from gurobipy import GRB
-import numpy as np
 
-# ----- Parameters -----
-n_shelters = 10
-n_hubs = 2
-n_trucks = 5
-truck_capacity = 50
-demand_per_shelter = 200
-truck_speed = 50  # km/h
+# Sets
+S = range(4)  # Shelters (0 is hub)
+V = range(1)  # Trucks
+T = range(2)  # Trips
 
-# Random coordinates for simplicity
-np.random.seed(0)
-coords = np.random.rand(n_shelters, 2) * 100  # 100x100 grid
+# Parameters
+distance = {
+    (0, 1): 10, (1, 0): 10,
+    (0, 2): 15, (2, 0): 15,
+    (0, 3): 20, (3, 0): 20,
+    (1, 2): 5,  (2, 1): 5,
+    (1, 3): 10, (3, 1): 10,
+    (2, 3): 7,  (3, 2): 7
+}
+speed = 60  # km/h
+unload_time_per_ton = 10  # minutes
+demand = {1: 2, 2: 3, 3: 1}  # tons
+capacity = 5  # tons
+Tmax = 1440  # minutes per trip
 
-def euclidean(i, j):
-    return np.linalg.norm(coords[i] - coords[j])
+# Model
+model = gp.Model("VehicleRoutingConnected")
 
-# Distance and time matrix
-c = np.array([[euclidean(i, j) for j in range(n_shelters)] for i in range(n_shelters)])
-t = c / truck_speed
+x = model.addVars(S, S, V, T, vtype=GRB.BINARY, name="x")
+q = model.addVars(S, V, T, vtype=GRB.CONTINUOUS, lb=0, name="q")
+u = model.addVars(S, V, T, vtype=GRB.CONTINUOUS, lb=0, ub=len(S), name="u")
 
-model = gp.Model("Hub_Location_and_Routing")
+# Objective: minimize total travel time
+model.setObjective(gp.quicksum((distance[i, j]/speed)*60 * x[i, j, v, t]
+                                for i in S for j in S if i != j for v in V for t in T), GRB.MINIMIZE)
 
-# ----- Variables -----
-# y[i]: 1 if shelter i is a hub
-y = model.addVars(n_shelters, vtype=GRB.BINARY, name="y")
+# Constraints
+# Truck starts and ends at hub (node 0)
+for v in V:
+    for t in T:
+        model.addConstr(gp.quicksum(x[0, j, v, t] for j in S if j != 0) == 1)  # Start at hub
+        model.addConstr(gp.quicksum(x[j, 0, v, t] for j in S if j != 0) == 1)  # End at hub
 
-# x[i,j,k,h]: 1 if truck k from hub h goes from i to j
-x = model.addVars(n_shelters, n_shelters, n_trucks, n_shelters, vtype=GRB.BINARY, name="x")
+# Flow conservation
+for v in V:
+    for t in T:
+        for k in S:
+            if k != 0:
+                model.addConstr(gp.quicksum(x[i, k, v, t] for i in S if i != k) ==
+                                gp.quicksum(x[k, j, v, t] for j in S if j != k))
 
-# q[i,k,h]: quantity delivered by truck k from hub h to shelter i
-q = model.addVars(n_shelters, n_trucks, n_shelters, vtype=GRB.CONTINUOUS, lb=0, name="q")
+# Capacity per trip
+for v in V:
+    for t in T:
+        model.addConstr(gp.quicksum(q[i, v, t] for i in S if i != 0) <= capacity)
 
-# ----- Objective: minimize total travel time -----
-model.setObjective(gp.quicksum(t[i][j] * x[i, j, k, h]
-                    for i in range(n_shelters) for j in range(n_shelters)
-                    for k in range(n_trucks) for h in range(n_shelters)), GRB.MINIMIZE)
+# Deliver only if visited
+for v in V:
+    for t in T:
+        for i in S:
+            if i != 0:
+                model.addConstr(q[i, v, t] <= capacity * gp.quicksum(x[j, i, v, t] for j in S if j != i))
 
-# ----- Constraints -----
-# 1. Exactly 10 hubs
-model.addConstr(y.sum() == n_hubs, "num_hubs")
+# Demand fulfillment
+for i in S:
+    if i != 0:
+        model.addConstr(gp.quicksum(q[i, v, t] for v in V for t in T) == demand[i])
 
-# 2. Demand satisfaction for non-hubs
-for i in range(n_shelters):
-    model.addConstr(
-        gp.quicksum(q[i, k, h] for k in range(n_trucks) for h in range(n_shelters)) == demand_per_shelter * (1 - y[i]),
-        f"demand_{i}")
+# Time per trip
+for v in V:
+    for t in T:
+        drive_time = gp.quicksum((distance[i, j]/speed)*60 * x[i, j, v, t] for i in S for j in S if i != j)
+        unload_time = gp.quicksum(unload_time_per_ton * q[i, v, t] for i in S if i != 0)
+        model.addConstr(drive_time + unload_time <= Tmax)
 
-# 3. No delivery to hubs
-for i in range(n_shelters):
-    for k in range(n_trucks):
-        for h in range(n_shelters):
-            model.addConstr(q[i, k, h] <= demand_per_shelter * (1 - y[i]), f"no_delivery_to_hubs_{i}{k}{h}")
+# Subtour elimination (MTZ)
+for v in V:
+    for t in T:
+        for i in S:
+            for j in S:
+                if i != j and i != 0 and j != 0:
+                    model.addConstr(u[i, v, t] - u[j, v, t] + len(S) * x[i, j, v, t] <= len(S) - 1)
 
-# 4. Truck capacity
-for h in range(n_shelters):
-    for k in range(n_trucks):
-        model.addConstr(gp.quicksum(q[i, k, h] for i in range(n_shelters)) <= truck_capacity * y[h],
-                        f"truck_capacity_{h}_{k}")
-
-# 5. Start and end at hub
-for h in range(n_shelters):
-    for k in range(n_trucks):
-        model.addConstr(gp.quicksum(x[h, j, k, h] for j in range(n_shelters) if j != h) == y[h], f"start_{h}_{k}")
-        model.addConstr(gp.quicksum(x[i, h, k, h] for i in range(n_shelters) if i != h) == y[h], f"end_{h}_{k}")
-
-# 6. Routing only if hub is selected
-for i in range(n_shelters):
-    for j in range(n_shelters):
-        for k in range(n_trucks):
-            for h in range(n_shelters):
-                model.addConstr(x[i, j, k, h] <= y[h], f"route_hub_active_{i}{j}{k}_{h}")
-
-# ----- Solve -----
-model.setParam('OutputFlag', 1)
+model.setParam('OutputFlag', 0)
 model.optimize()
+
+# Output
+for v in V:
+    for t in T:
+        route = []
+        for i in S:
+            for j in S:
+                if i != j and x[i, j, v, t].X > 0.5:
+                    route.append((i, j))
+        if route:
+            print(f"Vehicle {v}, Trip {t}: Route: {route}")
+            for i in S:
+                if i != 0 and q[i, v, t].X > 0:
+                    print(f"  Deliver to {i}: {q[i, v, t].X:.2f} tons")
