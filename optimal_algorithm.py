@@ -68,6 +68,7 @@ def solve_routing(S, V,
                 if i!=0:
                     m.addConstr(q[i,v,t] <= capacity *
                                 sum(x[j,i,v,t] for j in S if j!=i))
+                    m.addConstr(q[i, v, t] <= demand[i])
     for i in S:
         if i!=0:
             m.addConstr(sum(q[i,v,t] for v in V for t in T)==demand[i])
