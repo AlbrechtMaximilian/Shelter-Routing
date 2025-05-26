@@ -2,18 +2,19 @@ import os
 import pandas as pd
 import time
 from heuristic_algorithm import nearest_neighbor_heuristic
+#from naive_heuristic import naive_heuristic
 from opitmal_algorithm_speed_up import solve_routing
 
-def run_experiments(path_to_folder, include_heuristic=True, include_optimal=True):
+def run_experiments(path_to_folder, include_heuristic=True, include_naive_heuristic=True, include_optimal=True):
     """
     Runs the selected algorithms on all Excel instance files in the given folder.
 
     Args:
         path_to_folder (str): Base folder containing scenario subfolders with Excel instances.
         include_heuristic (bool): Whether to run the nearest neighbor heuristic.
+        include_naive_heuristic (bool): Whether to run the naive heuristic.
         include_optimal (bool): Whether to run the optimal solver.
     """
-    # Scenario ID to description mapping
     description_map = {
         1: "baseline (med shelters, med vehicles, med cap, med clustering)",
         2: "few shelters",
@@ -60,26 +61,41 @@ def run_experiments(path_to_folder, include_heuristic=True, include_optimal=True
             demand = {int(i): float(demand_df.loc[i, "demand"]) for i in demand_df.index}
             distance = {(int(i), int(j)): float(dist_df.loc[i, j]) for i in dist_df.index for j in dist_df.columns}
 
-            obj_heuristic = time_heuristic = obj_optimal = time_optimal = None
+            # Initialize values
+            obj_heuristic = time_heuristic = None
+            obj_naive = time_naive = None
+            obj_optimal = time_optimal = None
 
+            # Nearest Neighbor Heuristic
             if include_heuristic:
                 start = time.time()
                 _, _, _, obj_heuristic = nearest_neighbor_heuristic(S, V_size, distance, demand, capacity, speed, unload_t)
                 time_heuristic = time.time() - start
-                print(f"[✓] Heuristic finished: Scenario {scenario_id}, Instance {instance_id}")
+                print(f"[✓] NN Heuristic finished: Scenario {scenario_id}, Instance {instance_id}")
 
+            # Naive Heuristic (returns only obj)
+            if include_naive_heuristic:
+                start = time.time()
+                obj_naive = naive_heuristic(S, V_size, distance, demand, capacity, speed, unload_t)
+                time_naive = time.time() - start
+                print(f"[✓] Naive Heuristic finished: Scenario {scenario_id}, Instance {instance_id}")
+
+            # Optimal Solver
             if include_optimal:
                 start = time.time()
                 obj_optimal = solve_routing(S, V, distance, demand, capacity, speed, unload_t)
                 time_optimal = time.time() - start
-                print(f"[✓] Optimal solver finished: Scenario {scenario_id}, Instance {instance_id}")
+                print(f"[✓] Optimal Solver finished: Scenario {scenario_id}, Instance {instance_id}")
 
+            # Store results
             results.append({
                 "scenarioID": scenario_id,
                 "scenario_description": scenario_description,
                 "instanceID": instance_id,
                 "obj heuristic": obj_heuristic,
                 "time heuristic": time_heuristic,
+                "obj naive": obj_naive,
+                "time naive": time_naive,
                 "obj optimal": obj_optimal,
                 "time optimal": time_optimal,
             })
@@ -93,7 +109,8 @@ def run_experiments(path_to_folder, include_heuristic=True, include_optimal=True
 
 if __name__ == "__main__":
     run_experiments(
-        path_to_folder="instances_20250526_145608",  # Adjust this to your actual folder
+        path_to_folder="instances_20250526_145608",
         include_heuristic=True,
+        include_naive_heuristic=False,
         include_optimal=True
     )
