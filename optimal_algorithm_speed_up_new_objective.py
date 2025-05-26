@@ -2,23 +2,39 @@ import gurobipy as gp
 from gurobipy import GRB
 import time, math
 
+
 def solve_routing(S, V, distance, demand, capacity, speed, unload_t):
-    D = sum(demand[i] for i in S if i != 0)
-    K = sum(math.ceil(demand[i]/capacity) for i in demand)
-    V_eff = range(min(len(V), K))
-    T_max = math.ceil(D / (capacity * len(V_eff)))
-    T = range(T_max)
+    """
+    Solves a multi-trip CVRP minimizing the maximum time spent by any vehicle-trip.
+
+    Parameters:
+        S: set of nodes (0 = depot, others = customers)
+        V: set of vehicles
+        distance: dict[(i, j)] → distance from i to j
+        demand: dict[i] → demand at node i (tons), i ≠ 0
+        capacity: max tons per vehicle per trip
+        speed: vehicle speed (km/h)
+        unload_t: unload time per ton (minutes)
+    """
+    # --- Initialization ---
+    D = sum(demand[i] for i in S if i != 0)  # total demand
+    K = sum(math.ceil(demand[i] / capacity) for i in demand)  # upper bound on trips if 1-customer per trip
+    V_eff = range(min(len(V), K))  # effective vehicle set
+    T_max = math.ceil(D / (capacity * len(V_eff)))  # max number of trips per vehicle to cover all demand
+    T = range(T_max)  # trip indices
     print(f"max trips needed: {T_max}, vehicles used: {len(V_eff)}")
 
-    m = gp.Model()
+    m = gp.Model("MultiTripCVRP")
 
-    x = m.addVars(S, S, V_eff, T, vtype=GRB.BINARY, name="x")
-    q = m.addVars(S, V_eff, T, vtype=GRB.CONTINUOUS, lb=0, name="q")
-    u = m.addVars(S, V_eff, T, vtype=GRB.CONTINUOUS, lb=0, ub=len(S)-1, name="u")
-    y = m.addVars(V_eff, T, vtype=GRB.BINARY, name="y")
-    T_max_var = m.addVar(vtype=GRB.CONTINUOUS, name="T_max_var")
+    # --- Decision Variables ---
+    x = m.addVars(S, S, V_eff, T, vtype=GRB.BINARY, name="x")  # arc selection: x[i,j,v,t] = 1 if v uses (i→j) in trip t
+    q = m.addVars(S, V_eff, T, vtype=GRB.CONTINUOUS, lb=0,
+                  name="q")  # quantity delivered to node i by vehicle v in trip t
+    u = m.addVars(S, V_eff, T, vtype=GRB.CONTINUOUS, lb=0, ub=len(S) - 1, name="u")  # MTZ subtour elimination variables
+    y = m.addVars(V_eff, T, vtype=GRB.BINARY, name="y")  # trip activity: y[v,t] = 1 if vehicle v makes trip t
+    T_max_var = m.addVar(vtype=GRB.CONTINUOUS, name="T_max_var")  # max time spent on any trip (minimized)
 
-    # New Objective: Minimize the max time outside any vehicle
+    # --- Objective Function: Minimize max time spent by any vehicle-trip ---
     for v in V_eff:
         for t in T:
             trip_drive = gp.quicksum((distance[i, j] / speed) * 60 * x[i, j, v, t] for i in S for j in S if i != j)
@@ -26,17 +42,20 @@ def solve_routing(S, V, distance, demand, capacity, speed, unload_t):
             m.addConstr(trip_drive + trip_unload <= T_max_var)
     m.setObjective(T_max_var, GRB.MINIMIZE)
 
-    # Constraints
+    # --- Constraints ---
+
+    # Depot flow constraints
     for v in V_eff:
         for t in T:
-            dep = gp.quicksum(x[0, j, v, t] for j in S if j != 0)
-            ret = gp.quicksum(x[j, 0, v, t] for j in S if j != 0)
-            m.addConstr(dep == ret)
-            m.addConstr(dep <= (len(S) - 1) * y[v, t])
-            m.addConstr(dep >= y[v, t])
+            dep = gp.quicksum(x[0, j, v, t] for j in S if j != 0)  # depot departures
+            ret = gp.quicksum(x[j, 0, v, t] for j in S if j != 0)  # depot returns
+            m.addConstr(dep == ret)  # same number of departures and returns
+            m.addConstr(dep <= (len(S) - 1) * y[v, t])  # activate only if trip is used
+            m.addConstr(dep >= y[v, t])  # at least one arc if trip is active
             if t < T_max - 1:
-                m.addConstr(y[v, t] >= y[v, t + 1])
+                m.addConstr(y[v, t] >= y[v, t + 1])  # no skipping trips: later trips only if earlier are used
 
+    # Flow conservation (each customer's in-degree = out-degree per vehicle-trip)
     for v in V_eff:
         for t in T:
             for k in S:
@@ -46,39 +65,47 @@ def solve_routing(S, V, distance, demand, capacity, speed, unload_t):
                         gp.quicksum(x[k, j, v, t] for j in S if j != k)
                     )
 
+    # Capacity and delivery constraints
     for v in V_eff:
         for t in T:
-            m.addConstr(gp.quicksum(q[i, v, t] for i in S if i != 0) <= capacity)
+            m.addConstr(gp.quicksum(q[i, v, t] for i in S if i != 0) <= capacity)  # total load ≤ capacity
             for i in S:
                 if i != 0:
+                    # load delivered to i only if i is visited
                     m.addConstr(q[i, v, t] <= capacity * gp.quicksum(x[j, i, v, t] for j in S if j != i))
-                    m.addConstr(q[i, v, t] <= demand[i])
+                    m.addConstr(q[i, v, t] <= demand[i])  # can't deliver more than demand
 
+    # Fulfill all customer demand exactly once (across any vehicle-trip)
     for i in S:
         if i != 0:
             m.addConstr(gp.quicksum(q[i, v, t] for v in V_eff for t in T) == demand[i])
 
+    # Subtour elimination via MTZ formulation
     n = len(S)
     for v in V_eff:
         for t in T:
-            m.addConstr(u[0, v, t] == 0)
+            m.addConstr(u[0, v, t] == 0)  # depot starts with position 0
             for i in S:
-                m.addConstr(u[i, v, t] <= (n - 1) * y[v, t])
+                m.addConstr(u[i, v, t] <= (n - 1) * y[v, t])  # only meaningful if trip active
                 for j in S:
                     if i != j and i != 0 and j != 0:
+                        # classic MTZ constraint
                         m.addConstr(u[i, v, t] - u[j, v, t] + n * x[i, j, v, t] <= n - 1)
 
-    m.params.OutputFlag = 1
+    # --- Solve Model ---
+    m.params.OutputFlag = 1  # enable solver output
     t0 = time.time()
     m.optimize()
     print(f"Model Status: {m.Status} ({gp.GRB.Status[m.Status]})")
     print(f"Reported MIPGap: {m.MIPGap:.6f}")
-    print(f"Solved in {time.time() - t0:.2f}s, Obj={m.ObjVal:.1f}")
+    print(f"Solved in {time.time() - t0:.2f}s, Obj={m.ObjVal:.1f} minutes")
 
+    # --- Print Solution ---
     for v in V_eff:
         for t in T:
             if y[v, t].X < 0.5:
                 continue
+            # Extract used arcs
             arcs = [(i, j) for i in S for j in S if i != j and x[i, j, v, t].X > 0.5]
             tour = [0]
             while True:
