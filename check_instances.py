@@ -1,4 +1,6 @@
 import pandas as pd
+import matplotlib
+matplotlib.use('TkAgg')  # <-- Fix für PyCharm
 import matplotlib.pyplot as plt
 
 def plot_shelter_coordinates(excel_path):
@@ -37,4 +39,4 @@ def plot_shelter_coordinates(excel_path):
         print(f"Plot saved as fallback image: {fallback_path}")
 
 if __name__ == "__main__":
-    plot_shelter_coordinates("instances_20250526_143435/scenario_9/scenario_9_instance_1.xlsx")
+    plot_shelter_coordinates("instances_20250526_143435/scenario_8/scenario_8_instance_1.xlsx")
