@@ -17,7 +17,7 @@ def instance_generator_with_coordinates(num_instances=30):
     base_unload = 10
 
     shelters = {'low': 3, 'med': 5, 'high': 7}
-    vehicles = {'low': 1, 'med': 3, 'high': 4}
+    vehicles = {'low': 1, 'med': 3, 'high': 3}
     capacity = {'low': 5, 'med': 20, 'high': 30}
     def d_med(n): return np.random.randint(10, 51, size=n)
 

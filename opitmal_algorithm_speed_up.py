@@ -89,10 +89,10 @@ def solve_routing(S, V, distance, demand, capacity, speed, unload_t):
     t0 = time.time()
 
     # Stop when (UB – LB)/UB ≤ 1%
-    m.params.MIPGap = 0.01
+    #m.params.MIPGap = 0.01
 
     # Don’t run longer than 30 min (1,800 s)
-    m.params.TimeLimit = 60
+    #m.params.TimeLimit = 60
     m.params.OutputFlag = 1
     m.optimize()
     status_str = {GRB.LOADED: "Loaded", GRB.OPTIMAL: "Optimal", GRB.INFEASIBLE: "Infeasible",
@@ -120,7 +120,36 @@ def solve_routing(S, V, distance, demand, capacity, speed, unload_t):
                 if i!=0 and q[i,v,t].X > 1e-6:
                     print(f"  Delivered {q[i,v,t].X:.2f} t to node {i}")
 
-    return m.ObjVal
+    # --- After solve: extract objective and route structure ---
+    result_routes = {}
+
+    for v in V_eff:
+        vehicle_trips = []
+        for t in T:
+            if y[v, t].X < 0.5:
+                continue
+
+            # Build trip from arcs
+            arcs = {(i, j) for i in S for j in S if i != j and x[i, j, v, t].X > 0.5}
+            if not arcs:
+                continue
+
+            trip = [0]
+            current = 0
+            while True:
+                next_nodes = [j for (i, j) in arcs if i == current]
+                if not next_nodes or next_nodes[0] == 0:
+                    trip.append(0)
+                    break
+                next_node = next_nodes[0]
+                trip.append(next_node)
+                current = next_node
+
+            vehicle_trips.append(trip)
+        if vehicle_trips:
+            result_routes[v] = vehicle_trips
+
+    return m.ObjVal, result_routes
 
 
 def load_instance(path):
@@ -163,5 +192,7 @@ def load_instance(path):
 
 
 if __name__ == "__main__":
-    S, V, distance, demand, capacity, speed, unload_t = load_instance("instances_20250526_145608/scenario_9/scenario_9_instance_1.xlsx")
-    solve_routing(S, V, distance, demand, capacity, speed, unload_t)
+    S, V, distance, demand, capacity, speed, unload_t = load_instance("real_data.xlsx")
+    obj_val, dict = solve_routing(S, V, distance, demand, capacity, speed, unload_t)
+    print(obj_val)
+    print(dict)
