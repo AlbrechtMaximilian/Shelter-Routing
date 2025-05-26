@@ -299,7 +299,7 @@ def nearest_neighbor_heuristic(S, V_count, distance_matrix, demand_dict, capacit
         print(f"\nAn error occurred during stacked bar chart generation: {e}. Skipping chart.")
         # --- END MODIFIED CODE ---
 
-    return total_objective_value, comp_time
+    return total_objective_value, comp_time, vehicle_trip_assignments
 def load_instance(path):
     """
     Reads an Excel file at `path` with sheets:
