@@ -3,6 +3,8 @@ import time
 import pandas as pd
 import matplotlib.pyplot as plt  # For bar chart
 
+from path_mapping import plot_shelter_trips
+
 
 def nearest_neighbor_heuristic(S, V_count, distance_matrix, demand_dict, capacity, speed, unload_t_per_unit):
     t0 = time.time()
@@ -341,11 +343,16 @@ def load_instance(path):
 
 if __name__ == "__main__":
     try:
-        S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit = load_instance("real_data.xlsx")
-        nearest_neighbor_heuristic(S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit)
+        S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit = load_instance("instances_20250526_174333/scenario_3/scenario_3_instance_1.xlsx")
+        total_objective_value, comp_time, vehicle_trip_assignments = nearest_neighbor_heuristic(S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit)
     except FileNotFoundError:
         print("Error: 'real_data.xlsx' not found. Please ensure the file exists in the correct location.")
     except ImportError:
         print("Error: A required library (like pandas or matplotlib) might be missing. Please check your environment.")
     except Exception as e:
         print(f"An error occurred during execution: {e}")
+
+    coord_file = "instances_20250526_174333/scenario_3/scenario_3_instance_1.xlsx"
+    #print("VehicleTripAssignments")
+    #print(vehicle_trip_assignments)
+    gdf_trips, gdf_shelters = plot_shelter_trips(coord_file, vehicle_trip_assignments)
