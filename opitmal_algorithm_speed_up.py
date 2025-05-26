@@ -89,10 +89,10 @@ def solve_routing(S, V, distance, demand, capacity, speed, unload_t):
     t0 = time.time()
 
     # Stop when (UB – LB)/UB ≤ 1%
-    #m.params.MIPGap = 0.01
+    m.params.MIPGap = 0.01
 
     # Don’t run longer than 30 min (1,800 s)
-    #m.params.TimeLimit = 10
+    m.params.TimeLimit = 60
     m.params.OutputFlag = 1
     m.optimize()
     status_str = {GRB.LOADED: "Loaded", GRB.OPTIMAL: "Optimal", GRB.INFEASIBLE: "Infeasible",
@@ -119,6 +119,8 @@ def solve_routing(S, V, distance, demand, capacity, speed, unload_t):
             for i in tour:
                 if i!=0 and q[i,v,t].X > 1e-6:
                     print(f"  Delivered {q[i,v,t].X:.2f} t to node {i}")
+
+    return m.ObjVal
 
 
 def load_instance(path):
@@ -161,5 +163,5 @@ def load_instance(path):
 
 
 if __name__ == "__main__":
-    S, V, distance, demand, capacity, speed, unload_t = load_instance("instances_20250526_131056/scenario_1/scenario_1_instance_1.xlsx")
+    S, V, distance, demand, capacity, speed, unload_t = load_instance("instances_20250526_145608/scenario_9/scenario_9_instance_1.xlsx")
     solve_routing(S, V, distance, demand, capacity, speed, unload_t)

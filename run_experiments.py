@@ -93,7 +93,7 @@ def run_experiments(path_to_folder, include_heuristic=True, include_optimal=True
 
 if __name__ == "__main__":
     run_experiments(
-        path_to_folder="instances_20250526_143435",  # Adjust this to your actual folder
+        path_to_folder="instances_20250526_145608",  # Adjust this to your actual folder
         include_heuristic=True,
-        include_optimal=False
+        include_optimal=True
     )
