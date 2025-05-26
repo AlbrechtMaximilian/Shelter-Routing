@@ -643,21 +643,7 @@ if __name__ == "__main__":
                             (30, 30): 0.0}
         print("Successfully loaded 'distance' from example_30_shelter.py")
     except ImportError:
-        print("Could not import 'distance' from example_30_shelter.py. Using placeholder distances.")
-        print("WARNING: Results will be incorrect or heuristic might fail with incomplete placeholder distances.")
-        placeholder_S_nodes_list = list(range(4))
-        S_nodes = range(len(placeholder_S_nodes_list))
-        placeholder_demands_dict = {k:v for k,v in demands.items() if k in placeholder_S_nodes_list and k !=0}
-        demands = placeholder_demands_dict
-        import random
-        for i in placeholder_S_nodes_list:
-            for j in placeholder_S_nodes_list:
-                if i == j: distances_to_use[(i,j)] = 0
-                elif (j,i) in distances_to_use: distances_to_use[(i,j)] = distances_to_use[(j,i)]
-                else: distances_to_use[(i,j)] = random.randint(5,25)
-        print(f"Using S_nodes: {list(S_nodes)}")
-        print(f"Using demands: {demands}")
-        print(f"Using placeholder distances (example): {distances_to_use}")
+        print("Could not import 'distance' from example_30_shelter.py"
 
     vehicle_capacity = 30
     vehicle_speed = 60
