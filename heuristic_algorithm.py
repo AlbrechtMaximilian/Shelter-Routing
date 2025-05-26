@@ -2,6 +2,7 @@ import math
 import time
 import pandas as pd
 
+
 def nearest_neighbor_heuristic(S, V_count, distance_matrix, demand_dict, capacity, speed, unload_t_per_unit):
     t0 = time.time()
     """
@@ -188,5 +189,5 @@ def load_instance(path):
 
 
 if __name__ == "__main__":
-    S, V, distance, demand, capacity, speed, unload_t = load_instance("instances_20250526_113426/scenario_3/scenario_3_instance_1.xlsx")
+    S, V, distance, demand, capacity, speed, unload_t = load_instance("instances_20250526_142904/scenario_9/scenario_9_instance_1.xlsx")
     nearest_neighbor_heuristic(S, V, distance, demand, capacity, speed, unload_t)

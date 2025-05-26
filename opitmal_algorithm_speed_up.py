@@ -92,8 +92,8 @@ def solve_routing(S, V, distance, demand, capacity, speed, unload_t):
     #m.params.MIPGap = 0.01
 
     # Don’t run longer than 30 min (1,800 s)
-    m.params.TimeLimit = 10
-    #m.params.OutputFlag = 1
+    #m.params.TimeLimit = 10
+    m.params.OutputFlag = 1
     m.optimize()
     status_str = {GRB.LOADED: "Loaded", GRB.OPTIMAL: "Optimal", GRB.INFEASIBLE: "Infeasible",
                   GRB.INTERRUPTED: "Interrupted", GRB.TIME_LIMIT: "Time limit", GRB.SOLUTION_LIMIT: "Solution limit"}.get(m.Status, str(m.Status))
@@ -161,5 +161,5 @@ def load_instance(path):
 
 
 if __name__ == "__main__":
-    S, V, distance, demand, capacity, speed, unload_t = load_instance("instances_20250526_113426/scenario_3/scenario_3_instance_1.xlsx")
+    S, V, distance, demand, capacity, speed, unload_t = load_instance("instances_20250526_131056/scenario_1/scenario_1_instance_1.xlsx")
     solve_routing(S, V, distance, demand, capacity, speed, unload_t)
