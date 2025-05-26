@@ -643,7 +643,7 @@ if __name__ == "__main__":
                             (30, 30): 0.0}
         print("Successfully loaded 'distance' from example_30_shelter.py")
     except ImportError:
-        print("Could not import 'distance' from example_30_shelter.py"
+        print("Could not import 'distance' from example_30_shelter.py")
 
     vehicle_capacity = 30
     vehicle_speed = 60
