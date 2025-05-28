@@ -192,7 +192,7 @@ def load_instance(path):
 
 
 if __name__ == "__main__":
-    S, V, distance, demand, capacity, speed, unload_t = load_instance("real_data.xlsx")
+    S, V, distance, demand, capacity, speed, unload_t = load_instance("instances_20250526_171616/scenario_3/scenario_3_instance_1.xlsx")
     obj_val, dict = solve_routing(S, V, distance, demand, capacity, speed, unload_t)
     print(obj_val)
     print(dict)

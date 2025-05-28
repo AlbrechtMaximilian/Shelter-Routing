@@ -1,6 +1,8 @@
 import math
 import time
 import pandas as pd
+import matplotlib
+matplotlib.use('TkAgg')  # <-- Fix für PyCharm
 import matplotlib.pyplot as plt  # For bar chart
 
 from path_mapping import plot_shelter_trips
@@ -343,7 +345,7 @@ def load_instance(path):
 
 if __name__ == "__main__":
     try:
-        S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit = load_instance("instances_20250526_174333/scenario_3/scenario_3_instance_1.xlsx")
+        S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit = load_instance("instances_20250526_171616/scenario_3/scenario_3_instance_1.xlsx")
         total_objective_value, comp_time, vehicle_trip_assignments = nearest_neighbor_heuristic(S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit)
     except FileNotFoundError:
         print("Error: 'real_data.xlsx' not found. Please ensure the file exists in the correct location.")

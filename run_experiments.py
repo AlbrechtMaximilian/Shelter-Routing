@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import time
 from heuristic_algorithm import nearest_neighbor_heuristic
-#from naive_heuristic import naive_heuristic
+from naive_algorithm import naive_single_delivery
 from opitmal_algorithm_speed_up import solve_routing
 
 def run_experiments(path_to_folder, include_heuristic=True, include_naive_heuristic=True, include_optimal=True):
@@ -69,21 +69,22 @@ def run_experiments(path_to_folder, include_heuristic=True, include_naive_heuris
             # Nearest Neighbor Heuristic
             if include_heuristic:
                 start = time.time()
-                _, _, _, obj_heuristic = nearest_neighbor_heuristic(S, V_size, distance, demand, capacity, speed, unload_t)
-                time_heuristic = time.time() - start
+                obj_heuristic, computation_time , _ = nearest_neighbor_heuristic(S, V_size, distance, demand, capacity, speed, unload_t)
+                #time_heuristic = time.time() - start
+                time_heuristic = computation_time
                 print(f"[✓] NN Heuristic finished: Scenario {scenario_id}, Instance {instance_id}")
 
             # Naive Heuristic (returns only obj)
             if include_naive_heuristic:
                 start = time.time()
-                obj_naive = naive_heuristic(S, V_size, distance, demand, capacity, speed, unload_t)
+                obj_naive, _ = naive_single_delivery(S, range(V_size), distance, demand, capacity, speed, unload_t)
                 time_naive = time.time() - start
                 print(f"[✓] Naive Heuristic finished: Scenario {scenario_id}, Instance {instance_id}")
 
             # Optimal Solver
             if include_optimal:
                 start = time.time()
-                obj_optimal = solve_routing(S, V, distance, demand, capacity, speed, unload_t)
+                obj_optimal, _ = solve_routing(S, V, distance, demand, capacity, speed, unload_t)
                 time_optimal = time.time() - start
                 print(f"[✓] Optimal Solver finished: Scenario {scenario_id}, Instance {instance_id}")
 
@@ -109,8 +110,8 @@ def run_experiments(path_to_folder, include_heuristic=True, include_naive_heuris
 
 if __name__ == "__main__":
     run_experiments(
-        path_to_folder="instances_20250526_162716",
+        path_to_folder="instances_20250528_101234",
         include_heuristic=True,
-        include_naive_heuristic=False,
+        include_naive_heuristic=True,
         include_optimal=True
     )
