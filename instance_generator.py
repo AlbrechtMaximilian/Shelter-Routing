@@ -16,8 +16,8 @@ def instance_generator_with_coordinates(num_instances=30):
     base_speed = 60
     base_unload = 10
 
-    shelters = {'low': 3, 'med': 5, 'high': 7}
-    vehicles = {'low': 1, 'med': 3, 'high': 3}
+    shelters = {'low': 3, 'med': 7, 'high': 9}
+    vehicles = {'low': 1, 'med': 3, 'high': 5}
     capacity = {'low': 5, 'med': 20, 'high': 30}
     def d_med(n): return np.random.randint(10, 51, size=n)
 
@@ -94,4 +94,4 @@ def instance_generator_with_coordinates(num_instances=30):
 
 # call the generator
 if __name__ == "__main__":
-    instance_generator_with_coordinates(num_instances=1)
+    instance_generator_with_coordinates(num_instances=3)

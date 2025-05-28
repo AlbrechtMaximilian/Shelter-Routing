@@ -242,7 +242,7 @@ def nearest_neighbor_heuristic(S, V_count, distance_matrix, demand_dict, capacit
         else:
             plt.figure(figsize=(15, 8))
 
-            # Select a color palette. 'tab20' provides 20 reasonably distinct colors.
+            """# Select a color palette. 'tab20' provides 20 reasonably distinct colors.
             # Colors will cycle if total unique trips exceed palette size.
             color_palette = list(plt.cm.get_cmap('tab20').colors)
             if not color_palette:  # Fallback if colormap loading fails or is empty
@@ -294,7 +294,7 @@ def nearest_neighbor_heuristic(S, V_count, distance_matrix, demand_dict, capacit
 
             print("\nDisplaying stacked bar chart with globally distinct colored segments for travel time per trip...")
             plt.tight_layout()
-            plt.show()
+            plt.show()"""
 
     except ImportError:
         print(

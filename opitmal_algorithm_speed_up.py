@@ -92,7 +92,7 @@ def solve_routing(S, V, distance, demand, capacity, speed, unload_t):
     #m.params.MIPGap = 0.01
 
     # Don’t run longer than 30 min (1,800 s)
-    #m.params.TimeLimit = 60
+    m.params.TimeLimit = 120
     m.params.OutputFlag = 1
     m.optimize()
     status_str = {GRB.LOADED: "Loaded", GRB.OPTIMAL: "Optimal", GRB.INFEASIBLE: "Infeasible",

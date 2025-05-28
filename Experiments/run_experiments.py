@@ -16,15 +16,15 @@ def run_experiments(path_to_folder, include_heuristic=True, include_naive_heuris
         include_optimal (bool): Whether to run the optimal solver.
     """
     description_map = {
-        1: "baseline (med shelters, med vehicles, med cap, med clustering)",
+        1: "baseline",
         2: "few shelters",
         3: "many shelters",
         4: "few vehicles",
         5: "many vehicles",
         6: "low vehicle capacity",
         7: "high vehicle capacity",
-        8: "low clustering (uniform)",
-        9: "high clustering (tight groups)",
+        8: "low clustering",
+        9: "high clustering",
     }
 
     results = []
@@ -110,7 +110,7 @@ def run_experiments(path_to_folder, include_heuristic=True, include_naive_heuris
 
 if __name__ == "__main__":
     run_experiments(
-        path_to_folder="instances_20250528_101234",
+        path_to_folder="instances_20250528_135356",
         include_heuristic=True,
         include_naive_heuristic=True,
         include_optimal=True
