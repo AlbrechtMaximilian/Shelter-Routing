@@ -3,13 +3,17 @@ import matplotlib
 matplotlib.use('TkAgg')  # for PyCharm GUI
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 def evaluate_results(results_excel_path):
     """
-    Visualizes objective values as violin plots, computation time as bar chart (log scale),
-    and relative optimality gap as a separate bar chart.
+    Saves objective value violin plots, computation time bar charts (log scale),
+    and relative optimality gap charts as PNGs to the 'Plots' folder.
     """
     df = pd.read_excel(results_excel_path)
+    #results_dir = os.path.dirname(results_excel_path)
+    plots_dir = "Experiments/Plots"
+    os.makedirs(plots_dir, exist_ok=True)
 
     # Melt for violin plot (objective values)
     df_long_obj = df.melt(
@@ -36,7 +40,8 @@ def evaluate_results(results_excel_path):
     plt.grid(axis='y', linestyle='--', alpha=0.5)
     plt.tight_layout()
     plt.legend(title='Method')
-    plt.show()
+    plt.savefig(os.path.join(plots_dir, "objective_violin.png"))
+    plt.close()
 
     # --- Computation Time Bar Chart ---
     time_cols = ['time heuristic', 'time naive', 'time optimal']
@@ -63,7 +68,8 @@ def evaluate_results(results_excel_path):
     plt.grid(axis='y', linestyle='--', alpha=0.5)
     plt.tight_layout()
     plt.legend(title='Method')
-    plt.show()
+    plt.savefig(os.path.join(plots_dir, "computation_time_bar.png"))
+    plt.close()
 
     # --- Optimality Gap Plot ---
     df['gap_heuristic'] = (df['obj heuristic'] - df['obj optimal']) / df['obj optimal']
@@ -96,8 +102,8 @@ def evaluate_results(results_excel_path):
     plt.grid(axis='y', linestyle='--', alpha=0.5)
     plt.tight_layout()
     plt.legend(title='Method')
-    plt.show()
-
+    plt.savefig(os.path.join(plots_dir, "relative_gap_bar.png"))
+    plt.close()
 
 if __name__ == "__main__":
     evaluate_results("Experiments/instances_20250528_135356/experiment_results.xlsx")
