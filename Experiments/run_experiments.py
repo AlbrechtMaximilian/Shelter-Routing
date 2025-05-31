@@ -110,7 +110,7 @@ def run_experiments(path_to_folder, include_heuristic=True, include_naive_heuris
 
 if __name__ == "__main__":
     run_experiments(
-        path_to_folder="instances_20250528_135356",
+        path_to_folder="/Users/maximilian/PycharmProjects/Shelter-Routing/Experiments/instances_20250528_135356",
         include_heuristic=True,
         include_naive_heuristic=True,
         include_optimal=True

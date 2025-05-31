@@ -39,4 +39,4 @@ def plot_shelter_coordinates(excel_path):
         print(f"Plot saved as fallback image: {fallback_path}")
 
 if __name__ == "__main__":
-    plot_shelter_coordinates("instances_20250528_123337/scenario_8/scenario_8_instance_1.xlsx")
+    plot_shelter_coordinates("Experiments/instances_20250530_153207/scenario_1/scenario_1_instance_1.xlsx")

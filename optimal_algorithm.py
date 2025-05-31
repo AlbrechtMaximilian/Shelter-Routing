@@ -2,6 +2,7 @@ import gurobipy as gp
 from gurobipy import GRB
 import time
 import math
+import pandas as pd
 
 def solve_routing(S, V,
                   distance, demand,
@@ -98,7 +99,8 @@ def solve_routing(S, V,
                         )
 
     # 8) Solve
-    m.params.OutputFlag = 0
+    m.params.TimeLimit = 120
+    m.params.OutputFlag = 1
     t0 = time.time()
     m.optimize()
     runtime = time.time() - t0
@@ -124,28 +126,47 @@ def solve_routing(S, V,
     return m.ObjVal, runtime
 
 
+def load_instance(path):
+    """
+    Reads an Excel file at `path` with sheets:
+      • Params   (cols: param, value)
+      • Demand   (index=node_id, col=demand)
+      • Distance (square matrix of size S×S)
+    Returns:
+      S, V, distance_dict, demand_dict, capacity, speed, unload_t
+    """
+    # read sheets
+    params_df = pd.read_excel(path, sheet_name="Params")
+    demand_df = pd.read_excel(path, sheet_name="Demand", index_col=0)
+    dist_df   = pd.read_excel(path, sheet_name="Distance", index_col=0)
+
+    # parse params
+    p = params_df.set_index("param")["value"].to_dict()
+    S_size   = int(p["S_size"])
+    V_size   = int(p["V_size"])
+    capacity = float(p["capacity"])
+    speed    = float(p["speed"])
+    unload_t = float(p["unload_t"])
+
+    # build sets
+    S = range(S_size)
+    V = range(V_size)
+
+    # build demand dict
+    demand = {int(i): float(demand_df.loc[i, "demand"])
+              for i in demand_df.index}
+
+    # build distance dict
+    distance = {
+        (int(i), int(j)): float(dist_df.loc[i, j])
+        for i in dist_df.index for j in dist_df.columns
+    }
+
+    return S, V, distance, demand, capacity, speed, unload_t
+
+
 if __name__ == "__main__":
-    S = range(6)
-    V = range(40)
-
-    demand = {1: 45.0, 2: 19.0, 3: 16.0, 4: 43.0, 5: 17.0}
-    distance = {(0, 0): 0.0, (0, 1): 83.68322037874805, (0, 2): 75.6804227596865, (0, 3): 36.75445674204973,
-                (0, 4): 65.70919649721311, (0, 5): 47.3354231251481, (1, 0): 83.68322037874805, (1, 1): 0.0,
-                (1, 2): 13.29820762717557, (1, 3): 52.70381750142401, (1, 4): 96.11225482556968,
-                (1, 5): 37.17957676193532, (2, 0): 75.6804227596865, (2, 1): 13.29820762717557, (2, 2): 0.0,
-                (2, 3): 42.04372859580731, (2, 4): 82.9324530928631, (2, 5): 28.35037060897747,
-                (3, 0): 36.75445674204973, (3, 1): 52.70381750142401, (3, 2): 42.04372859580731, (3, 3): 0.0,
-                (3, 4): 53.25868896740302, (3, 5): 16.71966131615739, (4, 0): 65.70919649721311,
-                (4, 1): 96.11225482556968, (4, 2): 82.9324530928631, (4, 3): 53.25868896740302, (4, 4): 0.0,
-                (4, 5): 68.05640482087416, (5, 0): 47.3354231251481, (5, 1): 37.17957676193532,
-                (5, 2): 28.35037060897747, (5, 3): 16.71966131615739, (5, 4): 68.05640482087416, (5, 5): 0.0}
-
-    capacity = 30
-    speed    = 60
-    unload_t = 10
-
-    obj, elapsed = solve_routing(
-        S, V, distance, demand,
-        capacity, speed, unload_t
-    )
-    print(f"Objective = {obj:.1f} min, solved in {elapsed:.2f} s")
+    S, V, distance, demand, capacity, speed, unload_t = load_instance("Experiments/instances_20250528_135356/scenario_1/scenario_1_instance_1.xlsx")
+    obj_val, dict = solve_routing(S, V, distance, demand, capacity, speed, unload_t)
+    print(obj_val)
+    print(dict)
