@@ -345,7 +345,7 @@ def load_instance(path):
 
 if __name__ == "__main__":
     try:
-        S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit = load_instance("instances_20250526_171616/scenario_3/scenario_3_instance_1.xlsx")
+        S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit = load_instance("real_data.xlsx")
         total_objective_value, comp_time, vehicle_trip_assignments = nearest_neighbor_heuristic(S_nodes, V_vehicles_range, distances, demands, cap, spd, unload_time_per_unit)
     except FileNotFoundError:
         print("Error: 'real_data.xlsx' not found. Please ensure the file exists in the correct location.")
@@ -354,7 +354,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"An error occurred during execution: {e}")
 
-    coord_file = "instances_20250526_174333/scenario_3/scenario_3_instance_1.xlsx"
+    #coord_file = "instances_20250526_174333/scenario_3/scenario_3_instance_1.xlsx"
     #print("VehicleTripAssignments")
     #print(vehicle_trip_assignments)
-    gdf_trips, gdf_shelters = plot_shelter_trips(coord_file, vehicle_trip_assignments)
+    #gdf_trips, gdf_shelters = plot_shelter_trips(coord_file, vehicle_trip_assignments)
